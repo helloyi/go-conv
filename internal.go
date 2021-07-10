@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 func toBool(src, dst reflect.Value) error {
@@ -529,6 +530,46 @@ func toStruct(src, dst reflect.Value) error {
 
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
+	}
+
+	return nil
+}
+
+func toTimeDuration(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		str := src.String()
+		dur, err := time.ParseDuration(str)
+		if err != nil {
+			return err
+		}
+		dst.SetInt(int64(dur))
+
+	case reflect.Interface, reflect.Ptr:
+		return toTimeDuration(indirect(src), dst)
+
+	default:
+		return toInt(src, dst)
+	}
+
+	return nil
+}
+
+func toTimeTime(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		t, err := time.Parse(TimeLayout, s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(t))
+
+	case reflect.Interface, reflect.Ptr:
+		return toTimeTime(indirect(src), dst)
+
+	default:
+		return toStruct(src, dst)
 	}
 
 	return nil

@@ -6,6 +6,9 @@ import (
 	"reflect"
 )
 
+// TimeLayout default time layout for convert To time.Time
+var TimeLayout = "Mon Jan 2 15:04:05 -0700 MST 2006"
+
 // To convert to src to dst
 func To(src, dst interface{}) error {
 	return to(src, dst)
@@ -22,6 +25,16 @@ func to(src, dst interface{}) error {
 }
 
 func to0(src, dst reflect.Value) (err error) {
+	switch dst.Type().PkgPath() {
+	case "time":
+		switch dst.Type().Name() {
+		case "Duration":
+			return toTimeDuration(src, dst)
+		case "Time":
+			return toTimeTime(src, dst)
+		}
+	}
+
 	switch dst.Kind() {
 	case reflect.Bool:
 		return toBool(src, dst)
