@@ -4,10 +4,15 @@ package conv
 import (
 	"errors"
 	"reflect"
+
+	"github.com/maltegrosse/go-bytesize"
 )
 
 // TimeLayout default time layout for convert To time.Time
 var TimeLayout = "Mon Jan 2 15:04:05 -0700 MST 2006"
+
+// ByteSize type of byte size
+type ByteSize bytesize.ByteSize
 
 // To convert to src to dst
 func To(src, dst interface{}) error {
@@ -32,6 +37,10 @@ func to0(src, dst reflect.Value) (err error) {
 			return toTimeDuration(src, dst)
 		case "Time":
 			return toTimeTime(src, dst)
+		}
+	case "github.com/helloyi/go-conv":
+		if dst.Type().Name() == "ByteSize" {
+			return toByteSize(src, dst)
 		}
 	}
 

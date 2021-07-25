@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/maltegrosse/go-bytesize"
 )
 
 func toBool(src, dst reflect.Value) error {
@@ -567,6 +569,26 @@ func toTimeTime(src, dst reflect.Value) error {
 
 	case reflect.Interface, reflect.Ptr:
 		return toTimeTime(indirect(src), dst)
+
+	default:
+		return toStruct(src, dst)
+	}
+
+	return nil
+}
+
+func toByteSize(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		bs, err := bytesize.Parse(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(ByteSize(bs)))
+
+	case reflect.Interface, reflect.Ptr:
+		return toByteSize(indirect(src), dst)
 
 	default:
 		return toStruct(src, dst)
