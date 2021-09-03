@@ -38,6 +38,25 @@ func to0(src, dst reflect.Value) (err error) {
 		case "Time":
 			return toTimeTime(src, dst)
 		}
+	case "net":
+		switch dst.Type().Name() {
+		case "IP":
+			return toNetIP(src, dst)
+		case "HardwareAddr":
+			return toNetHardwareAddr(src, dst)
+		}
+	case "net/url":
+		if dst.Type().Name() == "URL" {
+			return toNetURL(src, dst)
+		}
+	case "net/mail":
+		if dst.Type().Name() == "Address" {
+			return toMailAddress(src, dst)
+		}
+	case "regexp":
+		if dst.Type().Name() == "Regexp" {
+			return toRegexpRegexp(src, dst)
+		}
 	case "github.com/helloyi/go-conv":
 		if dst.Type().Name() == "ByteSize" {
 			return toByteSize(src, dst)

@@ -1,8 +1,13 @@
 package conv
 
 import (
+	"errors"
 	"fmt"
+	"net"
+	"net/mail"
+	"net/url"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -595,4 +600,102 @@ func toByteSize(src, dst reflect.Value) error {
 	}
 
 	return nil
+}
+
+func toNetHardwareAddr(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		haddr, err := net.ParseMAC(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(haddr))
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return toNetHardwareAddr(indirect(src), dst)
+
+	default:
+		return &CannotConvError{src.Kind(), dst.Kind()}
+		// TODO: toBytes(src, dst)
+	}
+}
+
+func toNetIP(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		ip := net.ParseIP(s)
+		if len(ip) == 0 {
+			return errors.New("invalid ip")
+		}
+		dst.Set(reflect.ValueOf(ip))
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return toNetIP(indirect(src), dst)
+
+	default:
+		return &CannotConvError{src.Kind(), dst.Kind()}
+		// TODO: toBytes(src, dst)
+	}
+}
+
+func toNetURL(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		url, err := url.Parse(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(*url))
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return toNetURL(indirect(src), dst)
+
+	default:
+		return toStruct(src, dst)
+	}
+}
+
+func toMailAddress(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		addr, err := mail.ParseAddress(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(*addr))
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return toMailAddress(indirect(src), dst)
+
+	default:
+		return toStruct(src, dst)
+	}
+}
+
+func toRegexpRegexp(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		r, err := regexp.Compile(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(*r))
+		// TODO: POSIX regexp
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return toRegexpRegexp(indirect(src), dst)
+
+	default:
+		return toStruct(src, dst)
+	}
 }
