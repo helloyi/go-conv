@@ -267,7 +267,12 @@ func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) e
 		if dst.IsNil() {
 			dst.Set(reflect.MakeMapWithSize(dst.Type(), 1))
 		}
-		dst.SetMapIndex(reflect.ValueOf(nil), src)
+		key := reflect.Zero(dst.Type().Key())
+		dstElem := mapIndex(dst, key)
+		if err := convTo(src, dstElem); err != nil {
+			return err
+		}
+		dst.SetMapIndex(key, dstElem)
 
 	case reflect.Map:
 		if dst.IsNil() {
@@ -279,12 +284,7 @@ func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) e
 			key := iter.Key()
 
 			srcElem := iter.Value()
-			dstElem := dst.MapIndex(key)
-			if dstElem.Kind() == reflect.Invalid {
-				dstElem = reflect.New(dst.Type().Elem())
-				dstElem = dstElem.Elem()
-			}
-
+			dstElem := mapIndex(dst, key)
 			if err := convTo(srcElem, dstElem); err != nil {
 				return err
 			}
@@ -298,13 +298,8 @@ func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) e
 
 		for i := 0; i < src.Len(); i++ {
 			key := reflect.ValueOf(i) // TODO: check map key type
-
 			srcElem := src.Index(i)
-			dstElem := dst.MapIndex(key)
-			if dstElem.Kind() == reflect.Invalid {
-				dstElem = reflect.New(dst.Type().Elem())
-				dstElem = dstElem.Elem()
-			}
+			dstElem := mapIndex(dst, key)
 
 			if err := convTo(srcElem, dstElem); err != nil {
 				return err
@@ -319,14 +314,10 @@ func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) e
 
 		for i := 0; i < src.NumField(); i++ {
 			name := src.Type().Field(i).Name
-			key := reflect.ValueOf(reflect.TypeOf(name)) // TODO: check map key type
+			key := reflect.ValueOf(name) // TODO: check map key type
 
 			srcField := src.Field(i)
-			dstElem := dst.MapIndex(key)
-			if dstElem.Kind() == reflect.Invalid {
-				dstElem = reflect.New(dst.Type().Elem())
-				dstElem = dstElem.Elem()
-			}
+			dstElem := mapIndex(dst, key)
 
 			if err := convTo(srcField, dstElem); err != nil {
 				return err
@@ -417,17 +408,6 @@ func toSlice0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error)
 	}
 
 	return nil
-}
-
-func sliceIndex(slice reflect.Value, i int) (elem reflect.Value) {
-	if i >= slice.Len() {
-		elem = reflect.New(slice.Type().Elem())
-		newSlice := reflect.Append(slice, slice.Elem())
-		if slice.UnsafeAddr() != newSlice.UnsafeAddr() {
-			slice.Set(newSlice)
-		}
-	}
-	return slice.Index(i)
 }
 
 func toString(src, dst reflect.Value) error {
