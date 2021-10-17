@@ -6,6 +6,13 @@ Easy convert from one type to another in Go.
 
 
 
+TODO:
+
++ [ ] Weak type convert
++ [ ] ToXXX API
+
+
+
 ## Why
 
 If you are working with interfaces to handle things like dynamic content you’ll need an easy way to convert an interface into a given type. This is the library for you.
