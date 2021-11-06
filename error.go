@@ -11,6 +11,17 @@ type CannotConvError struct {
 	dstKind reflect.Kind
 }
 
+// OverflowError ...
+type OverflowError struct {
+	num     interface{}
+	srcKind reflect.Kind
+	dstKind reflect.Kind
+}
+
 func (e *CannotConvError) Error() string {
 	return fmt.Sprintf("cannot convert %s to %s", e.srcKind, e.dstKind)
+}
+
+func (e *OverflowError) Error() string {
+	return fmt.Sprintf("convert %v to %s overflows", e.num, e.dstKind.String())
 }

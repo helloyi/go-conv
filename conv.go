@@ -19,6 +19,11 @@ func To(src, dst interface{}) error {
 	return to(src, dst)
 }
 
+// WeakTo convert to src to dst (weak type convert)
+func WeakTo(src, dst interface{}) error {
+	return weakTo(src, dst)
+}
+
 func to(src, dst interface{}) error {
 	dstv := reflect.ValueOf(dst)
 	if dstv.Kind() != reflect.Ptr {
@@ -99,6 +104,26 @@ func to0(src, dst reflect.Value) (err error) {
 
 	case reflect.Struct:
 		return toStruct(src, dst)
+
+	default:
+		return &CannotConvError{src.Kind(), dst.Kind()}
+	}
+}
+
+func weakTo(src, dst interface{}) error {
+	dstv := reflect.ValueOf(dst)
+	if dstv.Kind() != reflect.Ptr {
+		return errors.New("non-pointer of dst")
+	}
+	srcv := reflect.ValueOf(src)
+
+	return weakTo0(srcv, dstv.Elem())
+}
+
+func weakTo0(src, dst reflect.Value) error {
+	switch dst.Kind() {
+	case reflect.Bool:
+		return weakToBool(src, dst)
 
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}

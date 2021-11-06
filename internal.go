@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -678,4 +679,40 @@ func toRegexpRegexp(src, dst reflect.Value) error {
 	default:
 		return toStruct(src, dst)
 	}
+}
+
+func weakToBool(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.Bool:
+		dst.SetBool(src.Bool())
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		dst.SetBool(src.Int() != 0)
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		dst.SetBool(src.Uint() != 0)
+
+	case reflect.Float32, reflect.Float64:
+		dst.SetBool(src.Float() != 0)
+
+	case reflect.Complex64, reflect.Complex128:
+		dst.SetBool(src.Complex() != complex(0, 0))
+
+	case reflect.String:
+		// "1", "t", "T", "true", "TRUE", "True":
+		// "0", "f", "F", "false", "FALSE", "False":
+		b, err := strconv.ParseBool(src.String())
+		if err != nil {
+			return err
+		}
+		dst.SetBool(b)
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToBool(indirect(src), dst)
+
+	default:
+		return &CannotConvError{src.Kind(), dst.Kind()}
+	}
+
+	return nil
 }
