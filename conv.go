@@ -125,6 +125,12 @@ func weakTo0(src, dst reflect.Value) error {
 	case reflect.Bool:
 		return weakToBool(src, dst)
 
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return weakToInt(src, dst)
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return weakToUint(src, dst)
+
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
 	}

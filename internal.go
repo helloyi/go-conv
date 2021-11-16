@@ -716,3 +716,111 @@ func weakToBool(src, dst reflect.Value) error {
 
 	return nil
 }
+
+func weakToInt(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.Bool:
+		if src.Bool() {
+			dst.SetInt(1)
+		} else {
+			dst.SetInt(0)
+		}
+
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
+		if isOverflowInt(src, dst) {
+			return &OverflowError{src.Interface(), src.Kind(), dst.Kind()}
+		}
+		dst.SetInt(src.Int())
+
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		if isOverflowInt(src, dst) {
+			return &OverflowError{src.Interface(), src.Kind(), dst.Kind()}
+		}
+		dst.SetInt(int64(src.Uint()))
+
+	case reflect.Float32, reflect.Float64:
+		if isOverflowInt(src, dst) {
+			return &OverflowError{src.Interface(), src.Kind(), dst.Kind()}
+		}
+		dst.SetInt(int64(src.Float()))
+
+	case reflect.Complex64, reflect.Complex128:
+		if isOverflowInt(src, dst) {
+			return &OverflowError{src.Interface(), src.Kind(), dst.Kind()}
+		}
+		dst.SetInt(int64(real(src.Complex())))
+
+	case reflect.String:
+		i, err := strconv.ParseInt(src.String(), 10, 64)
+		if err != nil {
+			return err
+		}
+		if dst.OverflowInt(i) {
+			return &OverflowError{src.String(), src.Kind(), dst.Kind()}
+		}
+		dst.SetInt(i)
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToInt(indirect(src), dst)
+
+	default:
+		return &CannotConvError{src.Kind(), dst.Kind()}
+	}
+
+	return nil
+}
+
+func weakToUint(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.Bool:
+		if src.Bool() {
+			dst.SetUint(1)
+		} else {
+			dst.SetUint(0)
+		}
+
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		if isOverflowUint(src, dst) {
+			return &OverflowError{src.Interface(), src.Kind(), dst.Kind()}
+		}
+		dst.SetUint(src.Uint())
+
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
+		if isOverflowUint(src, dst) {
+			return &OverflowError{src.Interface(), src.Kind(), dst.Kind()}
+		}
+		dst.SetUint(uint64(src.Int()))
+
+	case reflect.Float32, reflect.Float64:
+		if isOverflowUint(src, dst) {
+			return &OverflowError{src.Interface(), src.Kind(), dst.Kind()}
+		}
+		f := src.Float()
+		dst.SetUint(uint64(f))
+
+	case reflect.Complex64, reflect.Complex128:
+		if isOverflowUint(src, dst) {
+			return &OverflowError{src.Interface(), src.Kind(), dst.Kind()}
+		}
+		c := src.Complex()
+		dst.SetUint(uint64(real(c)))
+
+	case reflect.String:
+		u, err := strconv.ParseUint(src.String(), 10, 64)
+		if err != nil {
+			return err
+		}
+		if dst.OverflowUint(u) {
+			return &OverflowError{src.String(), src.Kind(), dst.Kind()}
+		}
+		dst.SetUint(u)
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToUint(indirect(src), dst)
+
+	default:
+		return &CannotConvError{src.Kind(), dst.Kind()}
+	}
+
+	return nil
+}
