@@ -116,3 +116,40 @@ func isOverflowUint(src, dst reflect.Value) bool {
 
 	return dst.OverflowUint(x)
 }
+
+func isOverflowFloat(src, dst reflect.Value) bool {
+	var x float64
+	switch src.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		i := src.Int()
+		if i != int64(float64(i)) {
+			return true
+		}
+
+		x = float64(i)
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		u := src.Uint()
+		if u != uint64(float64(u)) {
+			return true
+		}
+
+		x = float64(u)
+
+	case reflect.Float32, reflect.Float64:
+		x = src.Float()
+
+	case reflect.Complex64, reflect.Complex128:
+		c := src.Complex()
+		if imag(c) != 0 {
+			return true
+		}
+
+		x = real(c)
+
+	default:
+		panic("invalid kind")
+	}
+
+	return dst.OverflowFloat(x)
+}

@@ -824,3 +824,58 @@ func weakToUint(src, dst reflect.Value) error {
 
 	return nil
 }
+
+func weakToFloat(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.Bool:
+		if src.Bool() {
+			dst.SetFloat(1)
+		} else {
+			dst.SetFloat(0)
+		}
+
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
+		if isOverflowFloat(src, dst) {
+			return &OverflowError{src.Int(), src.Kind(), dst.Kind()}
+		}
+		dst.SetFloat(float64(src.Int()))
+
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		if isOverflowFloat(src, dst) {
+			return &OverflowError{src.Uint(), src.Kind(), dst.Kind()}
+		}
+		dst.SetFloat(float64(src.Uint()))
+
+	case reflect.Float32, reflect.Float64:
+		if isOverflowFloat(src, dst) {
+			return &OverflowError{src.Float(), src.Kind(), dst.Kind()}
+		}
+		f := src.Float()
+		dst.SetFloat(f)
+
+	case reflect.Complex64, reflect.Complex128:
+		if isOverflowFloat(src, dst) {
+			return &OverflowError{src.Complex(), src.Kind(), dst.Kind()}
+		}
+		c := src.Complex()
+		dst.SetFloat(real(c))
+
+	case reflect.String:
+		f, err := strconv.ParseFloat(src.String(), 64)
+		if err != nil {
+			return err
+		}
+		if dst.OverflowFloat(f) {
+			return &OverflowError{src.String(), src.Kind(), dst.Kind()}
+		}
+		dst.SetFloat(f)
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToFloat(indirect(src), dst)
+
+	default:
+		return &CannotConvError{src.Kind(), dst.Kind()}
+	}
+
+	return nil
+}
