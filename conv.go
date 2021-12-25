@@ -134,6 +134,9 @@ func weakTo0(src, dst reflect.Value) error {
 	case reflect.Float32, reflect.Float64:
 		return weakToFloat(src, dst)
 
+	case reflect.Complex64, reflect.Complex128:
+		return weakToComplex(src, dst)
+
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
 	}

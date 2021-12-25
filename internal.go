@@ -879,3 +879,49 @@ func weakToFloat(src, dst reflect.Value) error {
 
 	return nil
 }
+
+func weakToComplex(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.Bool:
+		if src.Bool() {
+			dst.SetComplex(1)
+		} else {
+			dst.SetComplex(0)
+		}
+
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
+		if isOverflowComplex(src, dst) {
+			return &OverflowError{src.Int(), src.Kind(), dst.Kind()}
+		}
+		dst.SetComplex(complex(float64(src.Int()), 0))
+
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		if isOverflowComplex(src, dst) {
+			return &OverflowError{src.Uint(), src.Kind(), dst.Kind()}
+		}
+		dst.SetComplex(complex(float64(src.Uint()), 0))
+
+	case reflect.Float32, reflect.Float64:
+		if isOverflowComplex(src, dst) {
+			return &OverflowError{src.Float(), src.Kind(), dst.Kind()}
+		}
+		dst.SetComplex(complex(src.Float(), 0))
+
+	case reflect.Complex64, reflect.Complex128:
+		if isOverflowComplex(src, dst) {
+			return &OverflowError{src.Complex(), src.Kind(), dst.Kind()}
+		}
+		dst.SetComplex(src.Complex())
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToComplex(indirect(src), dst)
+
+	case reflect.String:
+		// strconv.ParseComplex() // TODO
+
+	default:
+		return &CannotConvError{src.Kind(), dst.Kind()}
+	}
+
+	return nil
+}

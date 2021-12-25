@@ -153,3 +153,35 @@ func isOverflowFloat(src, dst reflect.Value) bool {
 
 	return dst.OverflowFloat(x)
 }
+
+func isOverflowComplex(src, dst reflect.Value) bool {
+	var x complex128
+	switch src.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		i := src.Int()
+		if i != int64(float64(i)) {
+			return true
+		}
+
+		x = complex(float64(i), 0)
+
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		u := src.Uint()
+		if u != uint64(float64(u)) {
+			return true
+		}
+
+		x = complex(float64(u), 0)
+
+	case reflect.Float32, reflect.Float64:
+		x = complex(src.Float(), 0)
+
+	case reflect.Complex64, reflect.Complex128:
+		x = src.Complex()
+
+	default:
+		panic("invalid kind")
+	}
+
+	return dst.OverflowComplex(x)
+}
