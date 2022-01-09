@@ -1,8 +1,11 @@
 package conv
 
 import (
+	"fmt"
 	"reflect"
 )
+
+var stringerType = reflect.TypeOf((*fmt.Stringer)(nil)).Elem()
 
 func indirect(v reflect.Value) reflect.Value {
 	for {

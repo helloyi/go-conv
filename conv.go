@@ -137,6 +137,9 @@ func weakTo0(src, dst reflect.Value) error {
 	case reflect.Complex64, reflect.Complex128:
 		return weakToComplex(src, dst)
 
+	case reflect.String:
+		return weakToString(src, dst)
+
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
 	}

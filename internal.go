@@ -925,3 +925,45 @@ func weakToComplex(src, dst reflect.Value) error {
 
 	return nil
 }
+
+func weakToString(src, dst reflect.Value) error {
+	if src.Type().Implements(stringerType) {
+		string, _ := src.Type().MethodByName("String")
+		s := string.Func.Call([]reflect.Value{src})[0].String()
+		dst.SetString(s)
+		return nil
+	}
+
+	var s string
+	switch src.Kind() {
+	case reflect.Bool:
+		s = strconv.FormatBool(src.Bool())
+
+	case reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Int:
+		s = strconv.FormatInt(src.Int(), 10)
+
+	case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		s = strconv.FormatUint(src.Uint(), 10)
+
+	case reflect.Float32, reflect.Float64:
+		s = strconv.FormatFloat(src.Float(), 'G', 24, 10)
+
+	case reflect.String:
+		s = src.String()
+
+	case reflect.Slice, reflect.Array, reflect.Struct, reflect.Map:
+		s = fmt.Sprintf("%v", src.Interface())
+
+	case reflect.Interface, reflect.Ptr:
+		toString(indirect(src), dst)
+
+	default:
+		// If you call String of other type, it's better to
+		// print something than to return error.
+		// The string is "<" + v.Type().String() + " Value>"
+		s = src.String()
+	}
+
+	dst.SetString(s)
+	return nil
+}

@@ -249,6 +249,20 @@ func TestToMap_composite(t *testing.T) {
 	assert.Equal(t, expected3, dst3)
 }
 
+type testStringer struct{}
+
+func (s testStringer) String() string {
+	return "testStringer.String"
+}
+
+func TestWeakToString(t *testing.T) {
+	var src testStringer
+	var dst string
+	err := weakTo(src, &dst)
+	require.Nil(t, err)
+	assert.Equal(t, dst, src.String())
+}
+
 func BenchmarkToBool(b *testing.B) {
 	var src, dst bool
 	for i := 0; i < b.N; i++ {
