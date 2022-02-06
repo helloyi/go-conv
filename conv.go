@@ -121,6 +121,39 @@ func weakTo(src, dst interface{}) error {
 }
 
 func weakTo0(src, dst reflect.Value) error {
+	switch dst.Type().PkgPath() {
+	case "time":
+		switch dst.Type().Name() {
+		case "Duration":
+			return weakToTimeDuration(src, dst)
+		case "Time":
+			return weakToTimeTime(src, dst)
+		}
+	case "net":
+		switch dst.Type().Name() {
+		case "IP":
+			return weakToNetIP(src, dst)
+		case "HardwareAddr":
+			return weakToNetHardwareAddr(src, dst)
+		}
+	case "net/url":
+		if dst.Type().Name() == "URL" {
+			return weakToNetURL(src, dst)
+		}
+	case "net/mail":
+		if dst.Type().Name() == "Address" {
+			return weakToMailAddress(src, dst)
+		}
+	case "regexp":
+		if dst.Type().Name() == "Regexp" {
+			return weakToRegexpRegexp(src, dst)
+		}
+	case "github.com/helloyi/go-conv":
+		if dst.Type().Name() == "ByteSize" {
+			return weakToByteSize(src, dst)
+		}
+	}
+
 	switch dst.Kind() {
 	case reflect.Bool:
 		return weakToBool(src, dst)

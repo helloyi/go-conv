@@ -967,3 +967,71 @@ func weakToString(src, dst reflect.Value) error {
 	dst.SetString(s)
 	return nil
 }
+
+func weakToTimeDuration(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		str := src.String()
+		dur, err := time.ParseDuration(str)
+		if err != nil {
+			return err
+		}
+		dst.SetInt(int64(dur))
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToTimeDuration(indirect(src), dst)
+
+	default:
+		return weakToInt(src, dst)
+	}
+
+	return nil
+}
+
+func weakToTimeTime(src, dst reflect.Value) error {
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		t, err := time.Parse(TimeLayout, s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(t))
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToTimeTime(indirect(src), dst)
+
+	default:
+		return weakToStruct(src, dst)
+	}
+
+	return nil
+}
+
+func weakToNetIP(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
+
+func weakToNetHardwareAddr(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
+
+func weakToNetURL(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
+
+func weakToMailAddress(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
+
+func weakToRegexpRegexp(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
+
+func weakToByteSize(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
+
+func weakToStruct(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
