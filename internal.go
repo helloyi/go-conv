@@ -188,7 +188,7 @@ func toArray(src, dst reflect.Value) error {
 	return toArray0(src, dst, to0)
 }
 
-func toArray0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) error {
+func toArray0(src, dst reflect.Value, to func(src, dst reflect.Value) error) error {
 	switch src.Kind() {
 	case reflect.Bool:
 		fallthrough
@@ -204,7 +204,7 @@ func toArray0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error)
 		}
 
 		dstElem := dst.Index(0)
-		if err := convTo(src, dstElem); err != nil {
+		if err := to(src, dstElem); err != nil {
 			return err
 		}
 
@@ -216,7 +216,7 @@ func toArray0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error)
 
 			srcElem := src.Index(i)
 			dstElem := dst.Index(i)
-			if err := convTo(srcElem, dstElem); err != nil {
+			if err := to(srcElem, dstElem); err != nil {
 				return err
 			}
 		}
@@ -230,13 +230,13 @@ func toArray0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error)
 			srcElem := src.Field(i)
 			dstElem := dst.Index(i)
 
-			if err := convTo(srcElem, dstElem); err != nil {
+			if err := to(srcElem, dstElem); err != nil {
 				return err
 			}
 		}
 
 	case reflect.Interface, reflect.Ptr:
-		return toArray0(indirect(src), dst, convTo)
+		return toArray0(indirect(src), dst, to)
 
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
@@ -254,7 +254,7 @@ func toMap(src, dst reflect.Value) error {
 	return toMap0(src, dst, to0)
 }
 
-func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) error {
+func toMap0(src, dst reflect.Value, to func(src, dst reflect.Value) error) error {
 	switch src.Kind() {
 	case reflect.Bool:
 		fallthrough
@@ -270,7 +270,7 @@ func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) e
 		}
 		key := reflect.Zero(dst.Type().Key())
 		dstElem := mapIndex(dst, key)
-		if err := convTo(src, dstElem); err != nil {
+		if err := to(src, dstElem); err != nil {
 			return err
 		}
 		dst.SetMapIndex(key, dstElem)
@@ -286,7 +286,7 @@ func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) e
 
 			srcElem := iter.Value()
 			dstElem := mapIndex(dst, key)
-			if err := convTo(srcElem, dstElem); err != nil {
+			if err := to(srcElem, dstElem); err != nil {
 				return err
 			}
 			dst.SetMapIndex(key, dstElem)
@@ -302,7 +302,7 @@ func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) e
 			srcElem := src.Index(i)
 			dstElem := mapIndex(dst, key)
 
-			if err := convTo(srcElem, dstElem); err != nil {
+			if err := to(srcElem, dstElem); err != nil {
 				return err
 			}
 			dst.SetMapIndex(key, dstElem)
@@ -320,14 +320,14 @@ func toMap0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) e
 			srcField := src.Field(i)
 			dstElem := mapIndex(dst, key)
 
-			if err := convTo(srcField, dstElem); err != nil {
+			if err := to(srcField, dstElem); err != nil {
 				return err
 			}
 			dst.SetMapIndex(key, dstElem)
 		}
 
 	case reflect.Interface, reflect.Ptr:
-		return toMap0(indirect(src), dst, convTo)
+		return toMap0(indirect(src), dst, to)
 
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
@@ -353,7 +353,7 @@ func toSlice(src, dst reflect.Value) error {
 	return toSlice0(src, dst, to0)
 }
 
-func toSlice0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error) error {
+func toSlice0(src, dst reflect.Value, to func(src, dst reflect.Value) error) error {
 	switch src.Kind() {
 	case reflect.Bool:
 		fallthrough
@@ -369,7 +369,7 @@ func toSlice0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error)
 		}
 
 		dstElem := sliceIndex(dst, 0)
-		if err := convTo(src, dstElem); err != nil {
+		if err := to(src, dstElem); err != nil {
 			return err
 		}
 
@@ -382,7 +382,7 @@ func toSlice0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error)
 			srcElem := src.Index(i)
 			dstElem := sliceIndex(dst, i)
 
-			if err := convTo(srcElem, dstElem); err != nil {
+			if err := to(srcElem, dstElem); err != nil {
 				return err
 			}
 		}
@@ -396,13 +396,13 @@ func toSlice0(src, dst reflect.Value, convTo func(src, dst reflect.Value) error)
 			srcElem := src.Field(i)
 			dstElem := sliceIndex(dst, i)
 
-			if err := convTo(srcElem, dstElem); err != nil {
+			if err := to(srcElem, dstElem); err != nil {
 				return err
 			}
 		}
 
 	case reflect.Interface, reflect.Ptr:
-		return toSlice0(indirect(src), dst, convTo)
+		return toSlice0(indirect(src), dst, to)
 
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
@@ -1033,5 +1033,25 @@ func weakToByteSize(src, dst reflect.Value) error {
 }
 
 func weakToStruct(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
+
+func weakToMap(src, dst reflect.Value) error {
+	return toMap0(src, dst, weakTo0)
+}
+
+func weakToSlice(src, dst reflect.Value) error {
+	return toSlice0(src, dst, weakTo0)
+}
+
+func weakToArray(src, dst reflect.Value) error {
+	return toArray0(src, dst, weakTo0)
+}
+
+func weakToInterface(src, dst reflect.Value) error {
+	return errors.New("not implement")
+}
+
+func weakToPtr(src, dst reflect.Value) error {
 	return errors.New("not implement")
 }

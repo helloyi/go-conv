@@ -173,6 +173,24 @@ func weakTo0(src, dst reflect.Value) error {
 	case reflect.String:
 		return weakToString(src, dst)
 
+	case reflect.Array:
+		return weakToArray(src, dst)
+
+	case reflect.Interface:
+		return weakToInterface(src, dst)
+
+	case reflect.Map:
+		return weakToMap(src, dst)
+
+	case reflect.Ptr:
+		return weakToPtr(src, dst)
+
+	case reflect.Slice:
+		return weakToSlice(src, dst)
+
+	case reflect.Struct:
+		return weakToStruct(src, dst)
+
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
 	}
