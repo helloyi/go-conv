@@ -436,6 +436,10 @@ func toString(src, dst reflect.Value) error {
 }
 
 func toStruct(src, dst reflect.Value) error {
+	return toStruct0(src, dst, to0)
+}
+
+func toStruct0(src, dst reflect.Value, to func(src, dst reflect.Value) error) error {
 	switch src.Kind() {
 	case reflect.Bool:
 		fallthrough
@@ -450,7 +454,7 @@ func toStruct(src, dst reflect.Value) error {
 			return nil
 		}
 		dstElem := dst.Field(0)
-		if err := to0(src, dstElem); err != nil {
+		if err := to(src, dstElem); err != nil {
 			return err
 		}
 
@@ -467,7 +471,7 @@ func toStruct(src, dst reflect.Value) error {
 				continue // TODO
 			}
 
-			if err := to0(srcElem, dstElem); err != nil {
+			if err := to(srcElem, dstElem); err != nil {
 				return err
 			}
 		}
@@ -495,7 +499,7 @@ func toStruct(src, dst reflect.Value) error {
 				continue
 			}
 
-			if err := to0(iter.Value(), dstField); err != nil {
+			if err := to(iter.Value(), dstField); err != nil {
 				return err
 			}
 		}
@@ -511,7 +515,7 @@ func toStruct(src, dst reflect.Value) error {
 				continue
 			}
 
-			if err := to0(srcField, dstField); err != nil {
+			if err := to(srcField, dstField); err != nil {
 				return err
 			}
 		}
@@ -1033,7 +1037,7 @@ func weakToByteSize(src, dst reflect.Value) error {
 }
 
 func weakToStruct(src, dst reflect.Value) error {
-	return errors.New("not implement")
+	return toStruct0(src, dst, weakTo0)
 }
 
 func weakToMap(src, dst reflect.Value) error {
