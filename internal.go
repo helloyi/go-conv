@@ -520,6 +520,9 @@ func toStruct0(src, dst reflect.Value, to func(src, dst reflect.Value) error) er
 			}
 		}
 
+	case reflect.Interface, reflect.Ptr:
+		return toSlice0(indirect(src), dst, to)
+
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
 	}
