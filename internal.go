@@ -1016,27 +1016,121 @@ func weakToTimeTime(src, dst reflect.Value) error {
 }
 
 func weakToNetIP(src, dst reflect.Value) error {
-	return errors.New("not implement")
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		ip := net.ParseIP(s)
+		if len(ip) == 0 {
+			return errors.New("invalid ip")
+		}
+		dst.Set(reflect.ValueOf(ip))
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToNetIP(indirect(src), dst)
+
+	// TODO: toBytes(src, dst)
+	default:
+		return weakToSlice(src, dst)
+	}
 }
 
 func weakToNetHardwareAddr(src, dst reflect.Value) error {
-	return errors.New("not implement")
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		haddr, err := net.ParseMAC(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(haddr))
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToNetHardwareAddr(indirect(src), dst)
+
+	// TODO: toBytes(src, dst)
+	default:
+		return weakToSlice(src, dst)
+	}
 }
 
 func weakToNetURL(src, dst reflect.Value) error {
-	return errors.New("not implement")
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		url, err := url.Parse(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(*url))
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToNetURL(indirect(src), dst)
+
+	default:
+		return weakToStruct(src, dst)
+	}
 }
 
 func weakToMailAddress(src, dst reflect.Value) error {
-	return errors.New("not implement")
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		addr, err := mail.ParseAddress(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(*addr))
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToMailAddress(indirect(src), dst)
+
+	default:
+		return weakToStruct(src, dst)
+	}
 }
 
 func weakToRegexpRegexp(src, dst reflect.Value) error {
-	return errors.New("not implement")
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		r, err := regexp.Compile(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(*r))
+		// TODO: POSIX regexp
+		return nil
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToRegexpRegexp(indirect(src), dst)
+
+	default:
+		return weakToStruct(src, dst)
+	}
 }
 
 func weakToByteSize(src, dst reflect.Value) error {
-	return errors.New("not implement")
+	switch src.Kind() {
+	case reflect.String:
+		s := src.String()
+		bs, err := bytesize.Parse(s)
+		if err != nil {
+			return err
+		}
+		dst.Set(reflect.ValueOf(ByteSize(bs)))
+
+	case reflect.Interface, reflect.Ptr:
+		return weakToByteSize(indirect(src), dst)
+
+	default:
+		return weakToStruct(src, dst)
+	}
+
+	return nil
 }
 
 func weakToStruct(src, dst reflect.Value) error {
