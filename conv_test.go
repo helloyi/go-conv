@@ -2,6 +2,7 @@ package conv
 
 import (
 	"math/bits"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -261,6 +262,65 @@ func TestWeakToString(t *testing.T) {
 	err := weakTo(src, &dst)
 	require.Nil(t, err)
 	assert.Equal(t, dst, src.String())
+}
+
+func TestWeakToBool(t *testing.T) {
+	x := 1
+	succTests := []struct {
+		src      interface{}
+		expected bool
+	}{
+		{&x, true},
+
+		{true, true},
+		{false, false},
+
+		{int(1), true},
+		{int(0), false},
+
+		{uint(1), true},
+		{uint(0), false},
+
+		{float32(1), true},
+		{float64(0), false},
+
+		{complex(0, 1), true},
+		{complex(0, 0), false},
+
+		{"1", true},
+		{"t", true},
+		{"T", true},
+		{"true", true},
+		{"TRUE", true},
+		{"True", true},
+		{"0", false},
+		{"f", false},
+		{"F", false},
+		{"false", false},
+		{"FALSE", false},
+		{"False", false},
+	}
+
+	failureTests := []struct {
+		src      interface{}
+		expected error
+	}{
+		{[]int{}, &CannotConvError{reflect.Slice, reflect.Bool}},
+	}
+
+	for _, test := range succTests {
+		var dst bool
+		err := weakTo(test.src, &dst)
+		require.Nil(t, err)
+		assert.Equal(t, test.expected, dst)
+	}
+
+	for _, test := range failureTests {
+		var dst bool
+		err := WeakTo(test.src, &dst)
+		require.Equal(t, test.expected, err)
+		assert.Equal(t, false, dst)
+	}
 }
 
 func BenchmarkToBool(b *testing.B) {
