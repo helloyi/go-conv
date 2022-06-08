@@ -44,7 +44,7 @@ func isOverflowInt(src, dst reflect.Value) bool {
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		u := src.Uint()
-		if u != uint64(int64(u)) {
+		if u != u&0x7fffffffffffffff {
 			return true
 		}
 
@@ -83,7 +83,7 @@ func isOverflowUint(src, dst reflect.Value) bool {
 	switch src.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		i := src.Int()
-		if i != int64(uint64(i)) {
+		if i != i&0x7fffffffffffffff {
 			return true
 		}
 

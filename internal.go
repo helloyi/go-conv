@@ -924,7 +924,11 @@ func weakToComplex(src, dst reflect.Value) error {
 		return weakToComplex(indirect(src), dst)
 
 	case reflect.String:
-		// strconv.ParseComplex() // TODO
+		c, err := strconv.ParseComplex(src.String(), 128)
+		if err != nil {
+			return err
+		}
+		dst.SetComplex(c)
 
 	default:
 		return &CannotConvError{src.Kind(), dst.Kind()}
@@ -953,7 +957,10 @@ func weakToString(src, dst reflect.Value) error {
 		s = strconv.FormatUint(src.Uint(), 10)
 
 	case reflect.Float32, reflect.Float64:
-		s = strconv.FormatFloat(src.Float(), 'G', 24, 10)
+		s = strconv.FormatFloat(src.Float(), 'G', -1, 64)
+
+	case reflect.Complex64, reflect.Complex128:
+		s = strconv.FormatComplex(src.Complex(), 'G', -1, 128)
 
 	case reflect.String:
 		s = src.String()
@@ -961,7 +968,13 @@ func weakToString(src, dst reflect.Value) error {
 	case reflect.Slice, reflect.Array, reflect.Struct, reflect.Map:
 		s = fmt.Sprintf("%v", src.Interface())
 
-	case reflect.Interface, reflect.Ptr:
+	case reflect.Uintptr:
+		s = fmt.Sprintf("0x%x", src.Uint())
+
+	case reflect.UnsafePointer:
+		s = fmt.Sprintf("0x%x", src.UnsafePointer())
+
+	case reflect.Interface, reflect.Pointer:
 		toString(indirect(src), dst)
 
 	default:
