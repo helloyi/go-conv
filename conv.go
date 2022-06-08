@@ -35,6 +35,10 @@ func to(src, dst interface{}) error {
 }
 
 func to0(src, dst reflect.Value) (err error) {
+	if !dst.CanSet() {
+		return &CannotSetError{}
+	}
+
 	switch dst.Type().PkgPath() {
 	case "time":
 		switch dst.Type().Name() {
@@ -121,6 +125,10 @@ func weakTo(src, dst interface{}) error {
 }
 
 func weakTo0(src, dst reflect.Value) error {
+	if !dst.CanSet() {
+		return &CannotSetError{}
+	}
+
 	switch dst.Type().PkgPath() {
 	case "time":
 		switch dst.Type().Name() {
